@@ -10,6 +10,28 @@ module.exports = {
 		request.get(url, {method: 'GET', uri: url}, function(errors, response, body){
 			if(errors) {
 				console.log('err: ' + errors);
+				if (errors.code == 'ECONNREFUSED')
+					return callback(errors, 500, '{\"error\": \"Service unavailable\"}' );
+				
+				callback(errors, null, null);
+			} else {
+				console.log('res: ' + body);
+				callback(null, response.statusCode, body);
+			}
+		});
+    },
+	
+	isAlive : function(callback){
+		const url = host+'/status';
+
+		console.log('GET ' + url);
+		
+		request.get(url, {method: 'GET', uri: url}, function(errors, response, body){
+			if(errors) {
+				console.log('err: ' + errors);
+				if (errors.code == 'ECONNREFUSED')
+					return callback(errors, 500, '{\"error\": \"Service unavailable\"}' );
+				
 				callback(errors, null, null);
 			} else {
 				console.log('res: ' + body);
@@ -26,6 +48,9 @@ module.exports = {
 		request.get(url, {method: 'GET', uri: url}, function(errors, response, body){
 			if(errors) {
 				console.log('err: ' + errors);
+				if (errors.code == 'ECONNREFUSED')
+					return callback(errors, 500, '{\"error\": \"Service unavailable\"}' );
+				
 				callback(errors, null, null);
 			} else {
 				console.log('res: ' + body);
@@ -42,6 +67,9 @@ module.exports = {
 		request.get(url, {method: 'GET', uri: url}, function(errors, response, body){
 			if(errors) {
 				console.log('err: ' + errors);
+				if (errors.code == 'ECONNREFUSED')
+					return callback(errors, 500, '{\"error\": \"Service unavailable\"}' );
+				
 				callback(errors, null, null);
 			} else {
 				console.log('res: ' + body);
@@ -58,6 +86,9 @@ module.exports = {
 		request.patch(url, {method: 'PATCH', uri: url}, function(errors, response, body){
 			if(errors) {
 				console.log('err: ' + errors);
+				if (errors.code == 'ECONNREFUSED')
+					return callback(errors, 500, '{\"error\": \"Service unavailable\"}' );
+				
 				callback(errors, null, null);
 			} else {
 				console.log('res: ' + body);
@@ -74,6 +105,9 @@ module.exports = {
 		request.delete(url, {method: 'DELETE', uri: url}, function(errors, response, body){
 			if(errors) {
 				console.log('err: ' + errors);
+				if (errors.code == 'ECONNREFUSED')
+					return callback(errors, 500, '{\"error\": \"Service unavailable\"}' );
+				
 				callback(errors, null, null);
 			} else {
 				console.log('res: ' + body);

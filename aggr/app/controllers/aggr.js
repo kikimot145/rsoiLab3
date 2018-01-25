@@ -6,16 +6,19 @@ const readersReq = require('../requests/readers_req');
 const booksReq = require('../requests/books_req');
 const authorsReq = require('../requests/authors_req');
 
+const valCheck = require('../valid_check');
+
 module.exports = (app) => {
   app.use('/', router);
 };
 
 router.get('/authors', (req, res, next) => {
-	let page = req.query.page;
-	let size = req.query.size;
+	let page = valCheck.checkPositiveInt(req.query.page, 0);
+	if (page < 0) return res.status(400).send({error: "Bad page param"});
 	
-	page  = (typeof(page) != 'undefined') ? page : 0;
-	size = (typeof(size) != 'undefined') ? size : 20;
+	
+	let size = valCheck.checkPositiveInt(req.query.size, 20);
+	if (size < 0) return res.status(400).send({error: "Bad size param"});
 	
 	console.log('***\n\n' + new Date() + ':\nGet all authors');
 	
@@ -25,7 +28,8 @@ router.get('/authors', (req, res, next) => {
 });
 
 router.get('/authors/:id', (req, res, next) => {
-	let id = req.params.id;
+	let id = valCheck.checkPositiveInt(req.params.id, -1);
+	if (id < 0) return res.status(400).send({error: "Bad author id"});
 	
 	console.log('***\n\n' + new Date() + ':\nGet author ' + id);
 	
@@ -35,16 +39,19 @@ router.get('/authors/:id', (req, res, next) => {
 });
 
 router.get('/books', (req, res, next) => {
-	let author = req.query.author;
-	let page  = req.query.page;
-	let size = req.query.size;
+	let author = valCheck.checkPositiveInt(req.query.author, 0);
+	if (author < 0) return res.status(400).send({error: "Bad author id"});
 	
-	page  = (typeof(page) != 'undefined') ? page : 0;
-	size = (typeof(size) != 'undefined') ? size : 20;
+	let page = valCheck.checkPositiveInt(req.query.page, 0);
+	if (page < 0) return res.status(400).send({error: "Bad page param"});
+	
+	
+	let size = valCheck.checkPositiveInt(req.query.size, 20);
+	if (size < 0) return res.status(400).send({error: "Bad size param"});
 	
 	console.log('***\n\n' + new Date() + ':\nGet all books with author ' + author);
 	
-	if (typeof(author) == 'undefined') {
+	if (author == 0) {
 		booksReq.getBooks(page, size, function (err, responseCode, body) {
 			if (err)
 				res.status(responseCode).send(JSON.parse(body));
@@ -59,7 +66,7 @@ router.get('/books', (req, res, next) => {
 						books.rows[index].author = JSON.parse(body);
 						delete books.rows[index].authorId;
 						
-						if (++cnt == books.rows.length) return res.status(responseCode).send(books);
+						if (++cnt == books.rows.length) return res.status(200).send(books);
 					});
 				});
 			}
@@ -73,7 +80,8 @@ router.get('/books', (req, res, next) => {
 });
 
 router.get('/books/:id', (req, res, next) => {
-	let id = req.params.id;
+	let id = valCheck.checkPositiveInt(req.params.id, -1);
+	if (id < 0) return res.status(400).send({error: "Bad book id"});
 	
 	console.log('***\n\n' + new Date() + ':\nGet book ' + id);
 	
@@ -84,9 +92,9 @@ router.get('/books/:id', (req, res, next) => {
 			let book = JSON.parse(body);
 			authorsReq.getAuthorById(book.authorId, function (err, responseCode, body) {
 					book.author = JSON.parse(body);
-					delete book.authorId;
+					delete books.rows[index].authorId;
 					
-					return res.status(responseCode).send(book);
+					return res.status(200).send(book);
 			});
 		}
 	});
@@ -94,7 +102,8 @@ router.get('/books/:id', (req, res, next) => {
 
 
 router.get('/readers/:id', (req, res, next) => {
-	let id = req.params.id;
+	let id = valCheck.checkPositiveInt(req.params.id, -1);
+	if (id < 0) return res.status(400).send({error: "Bad reader id"});
 	
 	console.log('***\n\n' + new Date() + ':\nGet reader ' + id);
 	
@@ -104,9 +113,11 @@ router.get('/readers/:id', (req, res, next) => {
 });
 
 router.patch('/readers/:id/books', (req, res, next) => {
-	let id = req.params.id;
+	let id = valCheck.checkPositiveInt(req.params.id, -1);
+	if (id < 0) return res.status(400).send({error: "Bad reader id"});
 	
-	let bookId = req.query.book;
+	let bookId = valCheck.checkPositiveInt(req.query.book, -1);
+	if (id < 0) return res.status(400).send({error: "Bad book id"});
 	
 	console.log('***\n\n' + new Date() + ':\nAdd book' + bookId + ' for reader ' + id);
 	
@@ -126,9 +137,11 @@ router.patch('/readers/:id/books', (req, res, next) => {
 });
 
 router.delete('/readers/:id/books', (req, res, next) => {
-	let id = req.params.id;
+	let id = valCheck.checkPositiveInt(req.params.id, -1);
+	if (id < 0) return res.status(400).send({error: "Bad reader id"});
 	
-	let bookId = req.query.book;
+	let bookId = valCheck.checkPositiveInt(req.query.book, -1);
+	if (id < 0) return res.status(400).send({error: "Bad book id"});
 	
 	console.log('***\n\n' + new Date() + ':\nRemove book' + bookId + ' for reader ' + id);
 	

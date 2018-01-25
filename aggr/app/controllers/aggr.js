@@ -63,9 +63,10 @@ router.get('/books', (req, res, next) => {
 				
 				books.rows.forEach( function (item, index) {
 					authorsReq.getAuthorById(item.authorId, function (err, responseCode, body) {
-						books.rows[index].author = JSON.parse(body);
-						delete books.rows[index].authorId;
-						
+						if (!err && responseCode == 200) {
+							books.rows[index].author = JSON.parse(body);
+							delete books.rows[index].authorId;
+						}
 						if (++cnt == books.rows.length) return res.status(200).send(books);
 					});
 				});
@@ -91,9 +92,10 @@ router.get('/books/:id', (req, res, next) => {
 		else {
 			let book = JSON.parse(body);
 			authorsReq.getAuthorById(book.authorId, function (err, responseCode, body) {
-					book.author = JSON.parse(body);
-					delete books.rows[index].authorId;
-					
+					if (!err && responseCode == 200) {
+						book.author = JSON.parse(body);
+						delete book.authorId;
+					}
 					return res.status(200).send(book);
 			});
 		}

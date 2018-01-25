@@ -6,6 +6,11 @@ module.exports = (app) => {
   app.use('/', router);
 };
 
+router.get('/status', (req, res, next) => {
+	console.log('***\n\n' + new Date() + ':\nAlive check');
+	res.status(200).send({status: "online"});
+});
+
 router.get('/books', (req, res, next) => {
 	let author = req.query.author;
 	let page  = req.query.page;

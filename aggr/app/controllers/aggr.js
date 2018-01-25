@@ -8,6 +8,64 @@ const authorsReq = require('../requests/authors_req');
 
 const valCheck = require('../valid_check');
 
+const amqp = require('amqplib/callback_api');
+var ampqConn = null;
+
+const queueCheckInterval = 10000;
+
+var queue = 'bookIds';
+function pushQueue(id) {
+  amqp.connect('amqp://localhost', function(err, conn){
+    conn.createChannel(function(err, ch){
+
+	  console.log('Book: ' + id + ' added to queue [' + queue + ']');
+      ch.assertQueue(queue, {durable : false});
+      ch.sendToQueue(queue, Buffer.from(id.toString()));
+      
+	  setTimeout(function() {
+		  ch.close(); 
+		  conn.close();
+	  },500);
+	  
+    });
+  });
+}
+
+function popQueue(){
+	amqp.connect('amqp://localhost', function(err, conn){
+		conn.createChannel(function(err, ch){
+			ch.assertQueue(queue, {durable : false});
+			ch.get(queue, {noAck : true},
+				function(err, bookId){	
+					console.log('QErr: ' + err + ' QId: ' + bookId);
+					if (!bookId) {
+						return;
+					} else {
+						setTimeout(popQueue, 10);
+					}
+					
+					bookId = bookId.content;
+					console.log('FromQueue: ' + bookId);
+			
+					booksReq.increaseBookCount(bookId, function(err, responseCode, body){
+						if (err || responseCode == 500) {
+							pushQueue(bookId);
+						} else {
+							console.log('Book '+ bookId + ' | ('+responseCode+') ' + body);
+						}
+					});
+				}
+			);
+		});
+	});
+}
+
+setInterval(function(){
+	booksReq.isAlive(function(err, responseCode, body){
+		if (responseCode == 200) popQueue();
+	});
+}, queueCheckInterval);
+
 module.exports = (app) => {
   app.use('/', router);
 };
@@ -152,6 +210,11 @@ router.delete('/readers/:id/books', (req, res, next) => {
 			res.status(responseCode).send(JSON.parse(body));
 		else {
 			booksReq.increaseBookCount(bookId, function (err, responseCode, body) {
+				if (err || responseCode == 500) {
+					pushQueue(bookId);
+					return res.status(202).send({result: 1});
+				}
+				
 				res.status(responseCode).send(JSON.parse(body));
 			});
 		}
